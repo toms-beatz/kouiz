@@ -25,7 +25,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./bdd:/var/lib/mysql 
+      - ../db-kouiz:/var/lib/mysql 
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_DATABASE}
