@@ -1,0 +1,94 @@
+version: "3" 
+
+services: 
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    hostname: traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik_data/traefik.toml:/etc/traefik/traefik.toml
+      - ./traefik_data/acme.json:/acme.json
+      - ./traefik_data/configurations:/configurations
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-secure.entrypoints=websecure"
+      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+      - "traefik.http.routers.traefik-secure.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=toms:$$apr1$$lERSZ3r6$$HP84SAycAOH0IRYfcy.CV/"
+      # - "traefik.http.routers.traefik-secure.middlewares=user-auth@file"  
+  api:
+    build:
+      context: ./api/
+      dockerfile: dockerfile
+      args: 
+        UID: 1000 
+        GID: 1000 
+    container_name:  kouiz-back
+    hostname: kouiz-back
+    restart:  always
+    volumes:
+      - ./api/:/app
+      - ./api/.env:/app/.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.api-kouiz-secure.entrypoints=websecure"
+      - "traefik.http.routers.api-kouiz-secure.rule=Host(`api.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.api-kouiz-secure.service=api-kouiz"
+      - "traefik.http.services.api-kouiz.loadbalancer.server.port=8000" 
+
+  db: 
+    image: mariadb:10.3.9
+    container_name: db-kouiz
+    hostname: db-kouiz
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ../db-kouiz:/var/lib/mysql 
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    hostname: phpmyadmin
+    env_file:
+      - .env
+    restart: always
+    environment:
+      - PMA_HOST=${DB_HOST}
+      - PMA_PORT=${DB_PORT}
+      # - PMA_USER=${DB_USERNAME}
+      # - PMA_PASSWORD=${DB_PASSWORD}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.phpmyadmin-secure.entrypoints=websecure"
+      - "traefik.http.routers.phpmyadmin-secure.rule=Host(`phpmyadmin.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.phpmyadmin-secure.service=phpmyadmin"
+      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80" 
+
+  react:
+    build:
+      context: ./app/
+      dockerfile: dockerfile
+    volumes:
+      - ./app:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.kouiz-secure.entrypoints=websecure"
+      - "traefik.http.routers.kouiz-secure.rule=Host(`www.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.kouiz-secure.service=kouiz"
+      - "traefik.http.services.kouiz.loadbalancer.server.port=3000" 
