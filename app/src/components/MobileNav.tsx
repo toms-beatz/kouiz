@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Menu } from 'lucide-react'
+import { UserRoundCheck, UserRoundPlus, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -26,36 +26,37 @@ const MobileNav = () => {
     <div className='sm:hidden'>
       <Menu
         onClick={toggleOpen}
-        className='relative z-50 h-5 w-5 text-zinc-700'
+        className='relative z-50 h-7 w-7 text-pBrown ml-6 dark:text-pBrown cursor-pointer'
       />
 
       {isOpen ? (
         <div className='fixed animate-in slide-in-from-top-5 fade-in-20 inset-0 z-0 w-full'>
-          <ul className='absolute bg-white border-b border-zinc-200 shadow-xl grid w-full gap-3 px-10 pt-20 pb-8'>
+          <ul className='absolute dark:bg-banger-blue bg-pWhite dark:bg-sBlue shadow-xl grid w-full gap-3 px-8 mt-14 py-4 dark:border-t border-pBlue backdrop-blur-lg'>
             <li>
               <Link
                 onClick={() =>
-                  closeOnCurrent('/auth/login')
+                  closeOnCurrent('/login')
                 }
-                className='flex items-center w-full font-semibold'
-                href='/auth/login'>
-                Connexion
+                className='flex items-center w-full font-regular text-pBrown font-title'
+                href='/login'>
+                <UserRoundCheck className='w-5 h-5 mr-2' />Connexion
               </Link>
             </li>
-            <li className='my-3 h-px w-full bg-gray-300' /><li>
+            <li>
               <Link
                 onClick={() =>
-                  closeOnCurrent('/auth/register')
+                  closeOnCurrent('/register')
                 }
-                className='flex items-center w-full font-semibold'
-                href='/auth/register'>
-                Inscription
+                className='flex items-center w-full font-regular text-pBrown font-title'
+                href='/register'>
+                <UserRoundPlus className='w-5 h-5 mr-2' />Inscription
               </Link>
             </li>
           </ul>
         </div>
-      ) : null}
-    </div>
+      ) : null
+      }
+    </div >
   )
 }
 

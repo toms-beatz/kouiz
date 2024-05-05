@@ -2,7 +2,7 @@
 import MaxWidthWrapper from "./MaxWidthWrapper";
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
-import { ArrowRight, Sun, Moon } from "lucide-react";
+import { UserRoundCheck, UserRoundPlus, ArrowRight, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from 'react';
 import MobileNav from "./MobileNav";
 import {
@@ -16,129 +16,96 @@ import { Button } from './ui/button'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { Icons } from './Icons'
 import { Switch } from './ui/switch'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import Router from "next/router"
+import { usePathname } from 'next/navigation'
+
 
 
 const Navbar = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
+        // Vérifie si l'utilisateur est authentifié au chargement initial
         const token = localStorage.getItem('token');
         setIsAuthenticated(!!token);
     }, []);
 
     const handleLogout = () => {
+        // Effectue la déconnexion et met à jour l'état d'authentification
         localStorage.removeItem('token');
         setIsAuthenticated(false);
+        router.push('/');
     }
+
+    useEffect(() => {
+        // Force le rechargement de la page après la connexion réussie
+        if (isAuthenticated) {
+            router.refresh();
+        }
+    }, [isAuthenticated]);
 
     const [darkModeEnabled, setDarkModeEnabled] = useState(false);
     useEffect(() => {
         const rootElement = document.documentElement;
         if (darkModeEnabled) {
-          rootElement.classList.add('dark');
-          rootElement.classList.remove('light');
+            rootElement.classList.add('dark');
+            rootElement.classList.remove('light');
+            document.body.classList.add('dark:bg-sBlue');
+            document.body.classList.remove('grainy');
         } else {
-          rootElement.classList.add('light');
-          rootElement.classList.remove('dark');
+            rootElement.classList.add('light');
+            rootElement.classList.remove('dark');
+            document.body.classList.add('grainy');
+            document.body.classList.remove('dark:bg-sBlue');
         }
-      }, [darkModeEnabled]);
+    }, [darkModeEnabled]);
     const darkEnabled = (isChecked: boolean) => {
         setDarkModeEnabled(isChecked);
     };
-
+    const pathname = usePathname()
     return (
-        <nav className="sticky h-14 inset-x-0 top-0 z-30 w-full border-b border-gray-200 bg-white/90 backdrop-blur-lg transition-all dark:bg-pBlue/50 dark:border-pBlue">
+        <nav className={` ${pathname == '/' ? 'sticky' : 'fixed'} h-14 inset-x-0 top-0 z-30 w-full border-b border-gray-20 bg-pWhite lg:bg-pWhite/30 backdrop-blur-lg transition-all dark:bg-sBlue dark:border-pBlue`}>
             <MaxWidthWrapper>
                 <div className="flex h-14 items-center justify-between border-b border-zinc-200 dark:border-pBlue">
-                    <Link
-                        href="/"
-                        className="flex z-40 font-semibold">
-                        <span>Kouiz.</span>
+                    <Link href="/">
+                        <div className="text-pBrown font-title font-black text-xl">
+                            Kouiz.
+                        </div>
                     </Link>
-                    <div className="ml-auto mr-4"><MobileNav /></div>
+
                     <div className="flex justify-end items-center">
                         {!isAuthenticated ? (
-                            <div className="hidden items-center space-x-4 sm:flex">
-                                <>
-                                    <Link href="/auth/login" className={buttonVariants({
+                            <>
+                                <div className="ml-auto mr-4"><MobileNav /></div>
+                                <div className="hidden items-center space-x-4 sm:flex">
+
+                                    <Link href="/login" className={buttonVariants({
                                         variant: "ghost",
                                         size: "sm",
+                                        className: 'font-title dark:hover:bg-pBlue'
                                     })} >
-                                        Sign in
+                                        <UserRoundCheck className='w-5 h-5 mr-2' />Connexion.
                                     </Link>
-                                    <Link href="auth/register" className={buttonVariants({
+                                    <Link href="/register" className={buttonVariants({
                                         size: "sm",
-                                        className: ' !bg-pBrown text-pWhite dark:bg-pBrown dark:text-pWhite'
+                                        className: 'font-title !bg-pBrown text-pWhite dark:bg-pBrown dark:text-pWhite'
                                     })} >
-                                        Get started <ArrowRight className="ml-1.5 w-5 h-5" />
+                                        <UserRoundPlus className='w-5 h-5 mr-2' />Inscription.
                                     </Link>
-                                </>
-                            </div>
+                                </div>
+                            </>
                         ) :
                             (
                                 <>
-                                    <Link
-                                        href='/dashboard'
-                                        className={buttonVariants({
-                                            variant: 'ghost',
-                                            size: 'sm',
-                                        })}>
-                                        Dashboard
-                                    </Link>
-
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger
-                                            asChild
-                                            className='overflow-visible'>
-                                            <Button className='rounded-full h-8 w-8 aspect-square bg-slate-400'>
-                                                <Avatar className='relative w-8 h-8'>
-                                                    <AvatarFallback>
-                                                        <span className='sr-only'>Test</span>
-                                                        <Icons.user className='h-4 w-4 text-zinc-900' />
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-
-                                        <DropdownMenuContent className='bg-white' align='end'>
-                                            <div className='flex items-center justify-start gap-2 p-2'>
-                                                <div className='flex flex-col space-y-0.5 leading-none'>
-                                                    <p className='font-medium text-sm text-black'>
-                                                        Test
-                                                    </p>
-                                                    <p className='w-[200px] truncate text-xs text-zinc-700'>
-                                                        test@test.com
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <DropdownMenuSeparator />
-
-                                            <DropdownMenuItem asChild>
-                                                <Link href='/dashboard'>Dashboard</Link>
-                                            </DropdownMenuItem>
-
-                                            <DropdownMenuSeparator />
-
-                                            <DropdownMenuItem className='cursor-pointer'>
-                                                <Link
-                                                    href='#'
-                                                    className={buttonVariants({
-                                                        size: 'sm',
-                                                    })}
-                                                    onClick={handleLogout}
-                                                >
-                                                    Déconnexion
-                                                </Link>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
                                 </>
                             )}
                         <div className="flex items-center justify-evenly ml-8">
-                            <Sun color={darkModeEnabled ? "gray" : "gray"} fill={darkModeEnabled ? "transparent" : "gray"} className="w-5 h-5" />
-                            <Switch onCheckedChange={darkEnabled} className="mx-2" />
-                            <Moon color={darkModeEnabled ? "gray" : "gray"} fill={darkModeEnabled ? "gray" : "transparent"} className="w-5 h-5" />
+                            <Sun color="#9D775D" fill={darkModeEnabled ? "transparent" : "#9D775D"} className="w-5 h-5" />
+                            <Switch onCheckedChange={darkEnabled} className="mx-2 data-[state=checked]:bg-pBlue data-[state=checked]:border-pBrown data-[state=checked]:border-0 dark:[&>*]:bg-sBlue [&>*]:ml-px" aria-label="darkmode-switch" />
+                            <Moon color="#9D775D" fill={darkModeEnabled ? "#9D775D" : "transparent"} className="w-5 h-5" />
                         </div>
                     </div>
                 </div>

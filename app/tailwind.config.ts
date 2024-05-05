@@ -17,7 +17,9 @@ const config = {
       'sBeige': '#FFF1E5',
       'tBeige': '#FFF9F5',
       'pBrown': '#9D775D',
-      'pWhite': '#ffffff'
+      'pWhite': '#ffffff',
+      'transparent': 'rgba(255, 255, 255, 0)',
+      'pGray': "#f1f1f1"
     },
     container: {
       center: true,
@@ -80,6 +82,10 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      fontFamily: {
+        title: ['var(--font-unbounded)'],
+        body: ['var(--font-manrope)'],
       },
     },
   },
