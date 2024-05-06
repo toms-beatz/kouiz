@@ -106,6 +106,8 @@ class KouizController extends Controller
                 }
             }
 
+            
+
             return response()->json([
                 'success' => true,
                 'status_code' => 201,
@@ -207,31 +209,35 @@ class KouizController extends Controller
     }
 
     public function show(Kouiz $kouiz)
-    {
-        try {
-            if ($kouiz) {
-                return response()->json([
-                    'success' => true,
-                    'status_code' => 200,
-                    'message' => 'Détails du Kouiz',
-                    'data' => $kouiz
-                ], 200, [], JSON_UNESCAPED_UNICODE);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'status_code' => 404,
-                    'error' => true,
-                    'message' => 'Kouiz non trouvé',
-                ], 404, [], JSON_UNESCAPED_UNICODE);
-            }
-        } catch (\Exception $e) {
+{
+    try {
+        // Charger les questions avec les options associées
+        $kouiz->load('questions.options');
+        $creator = DB::table('users')->where('id', $kouiz->creator_id)->value('username');
+        $kouiz->creator_name = $creator;
+        if ($kouiz) {
+            return response()->json([
+                'success' => true,
+                'status_code' => 200,
+                'message' => 'Détails du Kouiz',
+                'data' => $kouiz,
+            ], 200, [], JSON_UNESCAPED_UNICODE);
+        } else {
             return response()->json([
                 'success' => false,
-                'status_code' => 500,
+                'status_code' => 404,
                 'error' => true,
-                'message' => 'Erreur lors de la récupération du Kouiz',
-                'error_message' => $e->getMessage()
-            ], 500, [], JSON_UNESCAPED_UNICODE);
+                'message' => 'Kouiz non trouvé',
+            ], 404, [], JSON_UNESCAPED_UNICODE);
         }
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'status_code' => 500,
+            'error' => true,
+            'message' => 'Erreur lors de la récupération du Kouiz',
+            'error_message' => $e->getMessage()
+        ], 500, [], JSON_UNESCAPED_UNICODE);
     }
+}
 }

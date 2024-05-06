@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EditUserRequest;
+use App\Models\Kouiz;
 use Hash;
 use App\Http\Requests\RegisterUser;
 use App\Http\Requests\LoginUser;
@@ -226,10 +227,30 @@ class UserController extends Controller
         $perPage = 9;
         $users = $query->paginate($perPage);
 
+        $users->each(function ($user) {
+            $user->role = $user->getRoleNames()->first() ?? 'user';
+        });
+
         return response()->json([
             'success' => true,
             'status_code' => 200,
             'data' => $users,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+
+    public function dashboard() {
+        $kouiz_count = Kouiz::count();
+        $user_count = User::count();
+        $username = Auth::user()->username;
+        return response()->json([
+            'success' => true,
+            'status_code' => 200,
+            'data' => [
+                'kouiz_count' => $kouiz_count,
+                'user_count' => $user_count,
+                'username' => $username,
+            ],
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 }
