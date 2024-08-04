@@ -24,8 +24,8 @@ class EditUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'username' => 'string|max:255|unique:users',
-            'email' => 'string|email|max:255|unique:users',
+            'username' => 'string|max:255|unique:users|nullable',
+            'email' => 'string|email|max:255|unique:users|nullable',
             'password' => 'string|min:8|max:255',
         ];
     }

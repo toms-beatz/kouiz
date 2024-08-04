@@ -11,7 +11,6 @@ import { useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
-
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -143,13 +142,35 @@ export default function Home() {
           <li className='md:flex-1'>
             <div className='flex flex-col space-y-2 border-l-4 border-zinc-300 py-2 pl-4 md:border-l-0 md:boder-t-2 md:pb-0 md:pl-0 md:pt-4'>
               <span className='text-sm font-black text-blue-600 font-body text-pBlue dark:text-pWhite'>Étape 3</span>
-              <span className='text-xl font-semibold font-title text-pBrown'>Partagez votre Kouiz</span>
+              <span className='text-xl font-semibold font-title text-pBrown'>Répondez à des Kouiz</span>
               <span className='mt-2 text-zinc-700 font-body'>
-                Share your quiz with your friends, family or the world.
+                Répondez à des kouiz proposés par d'autres utilisateurs.
               </span>
             </div>
           </li>
         </ol>
+        <div>
+            <div className='mx-auto max-w-6xl px-6 lg:px-8'>
+              <div className='mt-12 flow-root sm:mt-14'>
+                <Image
+                  src="/kouiz-preview.png"
+                  alt='Kouiz preview'
+                  width={2880}
+                  height={1574}
+                  quality={100}
+                  className='!text-pBrown rounded-md shadow-2xl border dark:hidden'
+                />
+                <Image
+                  src="/kouiz-preview-dark.png"
+                  alt='Kouiz preview dark'
+                  width={2880}
+                  height={1574}
+                  quality={100}
+                  className='!text-pBrown rounded-md shadow-2xl hidden dark:flex'
+                />
+              </div>
+            </div>
+          </div>
         <Link className={buttonVariants({
           size: 'lg',
           className: 'font-title mt-12 !bg-pBrown !text-pWhite dark:bg-pBrown dark:text-pWhite w-64 rocket-label overflow-hidden'

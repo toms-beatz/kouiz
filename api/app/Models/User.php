@@ -50,7 +50,21 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Écoutez l'événement de suppression de l'utilisateur
+        static::deleting(function($user) {
+            // Supprimez tous les Kouiz de l'utilisateur
+            $user->kouiz()->delete();
+        });
+    }
     public function kouiz(): HasMany
+    {
+        return $this->hasMany(Kouiz::class, 'creator_id');
+    }
+    public function createdKouiz()
     {
         return $this->hasMany(Kouiz::class, 'creator_id');
     }

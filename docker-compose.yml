@@ -91,4 +91,4 @@ services:
       - "traefik.http.routers.kouiz-secure.entrypoints=websecure"
       - "traefik.http.routers.kouiz-secure.rule=Host(`www.${DOMAIN_NAME}`)"
       - "traefik.http.routers.kouiz-secure.service=kouiz"
-      - "traefik.http.services.kouiz.loadbalancer.server.port=3000" 
+      - "traefik.http.services.kouiz.loadbalancer.server.port=3000"

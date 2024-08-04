@@ -5,9 +5,11 @@ import { cn } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import AuthNavbar from "@/components/AuthNavbar";
 import { Unbounded, Manrope } from 'next/font/google'
-import Footer from "@/components/Footer"
 import { useState, useEffect } from "react"
 import { Toaster } from "@/components/ui/toaster"
+import UserContext from '@/contexts/UserContext';
+import AuthContext  from '@/contexts/AuthContext';
+
 
 
 const unbounded = Unbounded({
@@ -15,7 +17,7 @@ const unbounded = Unbounded({
   display: 'swap',
   variable: '--font-unbounded',
 })
- 
+
 const manrope = Manrope({
   subsets: ['latin'],
   display: 'swap',
@@ -28,12 +30,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
-  const [isConnected, setIsConnected] = useState(false);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
     const checkToken = async () => {
       const token = localStorage.getItem('token');
-      setIsConnected(!!token);
+      setToken(!!token);
+      console.log(token);
     };
     checkToken();
   }, []);
@@ -47,10 +51,14 @@ export default function RootLayout({
       <body className={cn(
         'min-h-screen font-body antialiased grainy dark:bg-sBlue',
       )}>
-        <Navbar/>
-        {children}
-        {isConnected ? <AuthNavbar/> : <Footer />}
-        <Toaster />
+        <AuthContext.Provider value={{ token, setToken }}>
+          <UserContext.Provider value={{ user, setUser }}>
+            <Navbar />
+            {children}
+            {token ? <AuthNavbar /> : ""}
+            <Toaster />
+          </UserContext.Provider>
+        </AuthContext.Provider>
       </body>
     </html>
   );

@@ -11,6 +11,8 @@ import { login } from '@/app/api/auth/Login';
 import { UserRoundCheck, Eye, EyeOff } from 'lucide-react'
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast"
+import { useContext } from "react";
+import UserContext from '@/contexts/UserContext';
 
 
 const Login = () => {
@@ -20,7 +22,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [errorMessages, setErrorMessages] = useState<{ [key: string]: string }>({});
     const [errorMessage, setErrorMessage] = useState('');
-    const [user, setUser] = useState(null);
+    const { setUser, user } = useContext(UserContext);
     const [showPassword, setShowPassword] = useState(false);
     const { toast } = useToast()
 
@@ -45,6 +47,8 @@ const Login = () => {
             const response = await login(user_data);
             if (response.success == true) {
                 localStorage.setItem('token', response.data.token);
+                setUser(response.data.user);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
                 window.location.replace('/dashboard');
                 toast({
                     description: "Connexion réussie ✅",
@@ -72,7 +76,6 @@ const Login = () => {
             }
         }
     }
-
     return (
         <>
             <div>

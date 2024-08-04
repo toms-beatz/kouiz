@@ -8,11 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class UserAnswers extends Model
 {
     use HasFactory;
+    protected $table = 'user_answers';
 
-    protected $fillable = [
-        'user_id',
-        'kouiz_id',
-        'question_id',
-        'option_id',
-    ];
+    public function details()
+    {
+        return $this->hasMany(UserAnswerDetail::class, 'user_answer_id');
+    }
 }

@@ -1,152 +1,164 @@
 "use client"
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import { redirect } from "next/navigation";
-import { Label } from "@radix-ui/react-label"
-import { Input } from "@/components/ui/input"
+import { Label } from "@radix-ui/react-label";
+import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
-import { update } from '@/app/api/auth/Update'
-import { log } from "console";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
+import UserContext from '@/contexts/UserContext';
+import AuthContext from '@/contexts/AuthContext';
+import { update } from "@/app/api/auth/Update";
+import { deleteAccount } from "@/app/api/auth/deleteAccount";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { useRouter } from 'next/navigation';
+import {userProfile} from "@/app/api/auth/UserProfile";
 
 
 
 const Profile = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-    useEffect(() => {
-        // Vérifie si l'utilisateur est authentifié au chargement initial
-        const token = localStorage.getItem('token');
-        setIsAuthenticated(!!token);
-    }, []);
-
-    const handleLogout = () => {
-        // Effectue la déconnexion et met à jour l'état d'authentification
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
-        redirect('/')
-    }
-
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showNewPasswordConfirmation, setShowNewPasswordConfirmation] = useState(false);
-
-    const toggleShowCurrentPassword = () => {
-        setShowCurrentPassword(!showCurrentPassword);
-    };
-
-    const toggleShowNewPassword = () => {
-        setShowNewPassword(!showNewPassword);
-    };
-
-    const toggleShowNewPasswordConfirmation = () => {
-        setShowNewPasswordConfirmation(!showNewPasswordConfirmation);
-    };
-
-    // const handleSubmit = async () => {
-
-    //     try {
-    //         const user_data = { email, password }
-    //         const response = await update(user_data);
-    //         console.log(response);
-    //         if (response.success == true) {
-    //             localStorage.setItem('token', response.token);
-
-    //             window.location.replace('/dashboard');
-    //             toast({
-    //                 description: "Connexion réussie ✅",
-    //                 className: 'dark:bg-pBlue'
-    //             })
-    //         }
-    //     } catch (error: any) {
-    //         if (axios.isAxiosError(error) && error.response?.data.errorsList) {
-    //             setErrorMessages(error.response?.data.errorsList);
-    //             toast({
-    //                 variant: "destructive",
-    //                 title: "Erreur",
-    //                 description: "Veuillez remplir les champs correctement"
-    //             })
-    //         } else {
-    //             if (error.response?.data.message) {
-    //                 console.log(error)
-    //                 setErrorMessage(error.response?.data.message);
-    //             }
-    //             toast({
-    //                 variant: "destructive",
-    //                 title: "Erreur",
-    //                 description: "Veuillez remplir les champs correctement"
-    //             })
-    //         }
-    //     }
-    // }
-
-
-
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const { toast } = useToast();
+    const router = useRouter();
 
-    const { toast } = useToast()
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         try {
+    //             let localToken = localStorage.getItem("token");
+    //             if (!localToken) {
+    //                 throw new Error("No token found");
+    //             }
+
+    //             const userProfileDetails = await userProfile(localToken, user.id);
+    //             if (userProfileDetails.success) {
+    //                 const detailsInfo = userProfileDetails.data;
+    //                 setDetailsInfo(detailsInfo);
+    //                 console.log("detailsInfo:", detailsInfo);
+    //             } else {
+    //                 setError("Failed to fetch user details");
+    //             }
+    //         } catch (error) {
+    //             console.error(error);
+    //             if (error.status === 404) {
+    //                 setError("User not found");
+    //             } else {
+    //                 setError("An unexpected error occurred");
+    //             }
+    //         }
+    //     };
+    //     fetchData();
+    // }, []);
+        
 
 
+    const handleLogout = () => {
+        // Perform logout and update authentication state
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        redirect('/');
+    };
 
-    // Fonctions de gestion de la soumission des formulaires
-    const handleSubmitPersonalInfo = async () => {
-        const token = localStorage.getItem('token')
-        axios({
-            method: 'put',
-            url: 'https://api.kouiz.fr/api/user/profile',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            data: {
-                username: username,
-                email: email,
-            },
-        })
-            .then((response) => {
-                if (response.data.success === true) {
-                    toast({
-                        description: "Changements effectués avec succès ✅",
-                        className: 'dark:bg-pBlue'
-                    })
-
-                }
-            })
-            .catch((error) => {
-                let errorMessages = '';
+    const handleConfirmDeleteAccount = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast({
+                    description: "Vous devez être connecté pour supprimer votre compte.",
+                    className: 'dark:bg-pBlue'
+                });
+                return;
             }
-            )
 
+            // Faites appel à votre fonction d'API pour supprimer le compte
+            const response = await deleteAccount(token);
 
-
-
+            if (response.success === true) {
+                // Déconnexion de l'utilisateur
+                localStorage.removeItem('token');
+                setIsAuthenticated(false);
+                // setUser(null); // Réinitialisation des données utilisateur
+                toast({
+                    description: "Votre compte a été supprimé avec succès.",
+                    className: 'dark:bg-pBlue'
+                });
+            } else {
+                toast({
+                    description: "Une erreur est survenue lors de la suppression de votre compte. Veuillez réessayer.",
+                    className: 'dark:bg-pBlue'
+                });
+            }
+        } catch (error) {
+            console.error('Erreur lors de la suppression du compte:', error);
+            toast({
+                description: "Une erreur est survenue. Veuillez réessayer.",
+                className: 'dark:bg-pBlue'
+            });
+        }
+    };
+    const handleDeleteAccount = async () => {
+        await handleConfirmDeleteAccount();
+        localStorage.removeItem('token');
+        router.push('/');
 
     };
 
+    const handleSubmitPersonalInfo = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            toast({
+                description: "Vous devez être connecté pour modifier vos informations.",
+                className: 'dark:bg-pBlue'
+            });
+            return;
+        }
 
-    // const handleSubmitPasswordInfo = () => {
-
-    //     try {
-    //         // Envoyer les données au serveur
-    //         const response = update({ token, passwordInfo });
-    //         console.log(response);
-    //         // Mettre à jour l'état ou rediriger si nécessaire
-    //     } catch (error) {
-    //         setErrors(error.response?.data.errors || {});
-    //         console.log(errors)
-    //     }
-
-    // };
+        try {
+            const response = await update(token, username, email);
+            if (response.success === true) {
+                toast({
+                    description: "Changements effectués avec succès ✅",
+                    className: 'dark:bg-pBlue'
+                });
+                localStorage.setItem('user', JSON.stringify({username: username == "" ? JSON.parse(localStorage.getItem('user')).username : username, email: email == "" ? JSON.parse(localStorage.getItem('user')).email : email}));
+                console.log(localStorage.getItem('user'));
+            } else {
+                // Handle case where success is false
+                toast({
+                    description: "Une erreur est survenue. Veuillez réessayer. 🚨",
+                    className: 'dark:bg-pBlue'
+                });
+            }
+        } catch (error) {
+            // Handle errors from the API call
+            console.error('Erreur lors de la mise à jour des informations:', error);
+            toast({
+                description: "Une erreur est survenue. Veuillez réessayer. 🚨",
+                className: 'dark:bg-pBlue'
+            });
+        }
+    };
 
     return (
         <>
             <MaxWidthWrapper className="md:pr-0 px-0 mt-14">
-                <div className="sm:pt-20 sm:pl-52 pt-20 md:pr-20 dark:bg-sBlue w-full pb-32 px-6">
+                <div className="sm:pt-8 sm:pl-52 pt-8 md:pr-20 dark:bg-sBlue w-full pb-32 px-6">
                     <div className="flex flex-col">
                         <h1 className="text-3xl font-title font-bold text-pBrown">Mon profil.</h1>
                         <p className="font-body lg:my-4 my-2 text-md">Gérez votre compte ici.</p>
@@ -186,7 +198,7 @@ const Profile = () => {
                             </div>
                         </div>
 
-                        <div className="w-full border-t border-pBrown my-24"></div>
+                        {/* <div className="w-full border-t border-pBrown my-24"></div>
 
                         <div className="flex lg:flex-row flex-col">
                             <div>
@@ -257,7 +269,7 @@ const Profile = () => {
                                     </Link>
                                 </form>
                             </div>
-                        </div>
+                        </div> */}
 
                         <div className="w-full border-t border-pBrown my-24"></div>
 
@@ -275,19 +287,28 @@ const Profile = () => {
                                     >
                                         Me déconnecter
                                     </Link>
-                                    <Link
-                                        href='/'
-                                        className={`lg:w-1/2 w-8/12 font-title ${buttonVariants({ variant: 'destructive', size: 'lg' })}`}
-                                    >
-                                        Supprimer mon compte
-                                    </Link>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button className={`lg:w-1/2 w-8/12 font-title ${buttonVariants({ variant: 'destructive', size: 'lg' })}`}
+                                            >Supprimer mon compte</Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Êtes vous sûr(e) de vouloir supprimer votre compte ?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Cette action est irréversible.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                <AlertDialogAction className={`font-title ${buttonVariants({ variant: 'destructive'})}`} onClick={handleDeleteAccount}>Supprimer</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </div>
                             </div>
                         </div>
-
-
                     </div>
-
                 </div>
             </MaxWidthWrapper>
         </>

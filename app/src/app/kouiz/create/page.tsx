@@ -34,7 +34,7 @@ const KouizCreate = () => {
             currentStepComponent = <Step1 formData={formData} updateFormData={updateFormData} nextStep={nextStep} />;
             break;
         case 2:
-            currentStepComponent = <Step2 formData={formData} updateFormData={updateFormData} nextStep={nextStep} />;
+            currentStepComponent = <Step2 formData={formData} updateFormData={updateFormData} />;
             break;
         default:
             currentStepComponent = <Step1 formData={formData} updateFormData={updateFormData} nextStep={nextStep} />;
@@ -49,14 +49,14 @@ const KouizCreate = () => {
                             <BackButton />
                             <h1 className="text-3xl font-title font-bold text-pBrown">Création de Kouiz.</h1>
                             <div className="my-4">
-                                Créez un Kouiz à l'aide du formulaire ci-dessous
+                                Créez un Kouiz à l'aide du formulaire ci-dessous.
                             </div>
                             {currentStepComponent}
                         </div>
                     </div>
 
                 </div>
-            </MaxWidthWrapper >
+            </MaxWidthWrapper>
         </>
         
     );

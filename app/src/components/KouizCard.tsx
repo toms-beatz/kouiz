@@ -1,45 +1,60 @@
 import Link from "next/link";
-import { Eye, PenLine, Delete, PencilRuler, Trash2 } from "lucide-react";
-import { badgeVariants } from "./ui/badge";
-import { cn } from "@/lib/utils";
+import { Eye, PencilRuler, Trash } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { buttonVariants } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { deleteKouiz } from "@/app/api/auth/DeleteKouiz";
 
-export const KouizCard = ({ id, emoji, title, description, category }) => {
+export const KouizCard = ({ id, emoji, title, description }) => {
+    const { toast } = useToast();
 
-    const getColorClass = (category) => {
-        switch (category) {
-            case 'Éducation':
-                return 'bg-[#FEC89A] hover:bg-sBlue';
-            case 'Divertissement':
-                return 'bg-[#FCD5CE] hover:bg-sBlue';
-            case 'Culture générale':
-                return 'bg-[#FFB5A7] hover:bg-sBlue';
-            default:
-                return 'bg-[#f1f1f1] hover:bg-sBlue';
+    const handleConfirmDeleteKouiz = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast({
+                    description: "Vous devez être connecté pour supprimer votre kouiz.",
+                    className: 'dark:bg-pBlue'
+                });
+                return;
+            }
+            const response = await deleteKouiz(token, id);
+
+            if (response.success === true) {
+                toast({
+                    description: "Votre kouiz a été supprimé avec succès.",
+                    className: 'dark:bg-pBlue'
+                });
+            } else {
+                toast({
+                    description: "Une erreur est survenue lors de la suppression de votre kouiz. Veuillez réessayer.",
+                    className: 'dark:bg-pBlue'
+                });
+            }
+        } catch (error) {
+            console.error('Erreur lors de la suppression du kouiz:', error);
+            toast({
+                description: "Une erreur est survenue. Veuillez réessayer.",
+                className: 'dark:bg-pBlue'
+            });
         }
     };
 
-    const colorClass = getColorClass(category);
+    const handleDeleteKouiz = async () => {
+        await handleConfirmDeleteKouiz();
+        location.reload();
 
-    const getCategoryEmoji = (category) => {
-        switch (category) {
-            case 'Éducation':
-                return '📚';
-            case 'Divertissement':
-                return '🍿';
-            case 'Culture générale':
-                return '🧠';
-            default:
-                return '';
-        }
     };
-
-    const categoryEmoji = getCategoryEmoji(category);
-    const formattedCategory = category
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") 
-        .replace(/[^a-zA-Z0-9]/g, "-");
-
 
     return (
         <>
@@ -47,20 +62,35 @@ export const KouizCard = ({ id, emoji, title, description, category }) => {
                 <div>
                     <div className="flex justify-between mb-4">
                         <div className="text-2xl">{emoji}</div>
-                        <Link href={`/category/${formattedCategory}`} className={cn(badgeVariants({ variant: "default" }), `${colorClass} hover:text-pWhite text-pBlue`)}>
-                            {categoryEmoji} {category}
-                        </Link>
                     </div>
 
-                    <h2 className="font-title font-bold text-xl l">{title}</h2>
-                    <div className="text-md break-al">{description}</div>
+                    <h2 className="font-title font-bold text-xl">{title}</h2>
+                    <div className="text-md">{description}</div>
                 </div>
 
 
                 <div className="flex mt-auto justify-between">
-                    <Link href={`/kouiz/view/${id}`} className="hover:underline text-pBrown font-title flex items-center text-sm">Voir<Eye className="ml-1 w-4 h-4" /></Link>
-                    <Link href={`/kouiz/edit/${id}`} className="hover:underline text-pBrown font-title flex items-center text-sm">Modifier<PencilRuler className="ml-1 w-4 h-4" /></Link>
-                    <Link href={`/kouiz/delete/${id}`} className="hover:underline text-pBrown font-title flex items-center text-sm">Supprimer<Trash2 className="ml-1 w-4 h-4" /></Link>
+                    <Link href={`/kouiz/${id}`} className="hover:underline text-pBrown font-title flex items-center text-sm">Voir<Eye className="ml-1 w-4 h-4" /></Link>
+                    <Link href={`/kouiz/${id}/edit`} className="hover:underline text-pBrown font-title flex items-center text-sm">Modifier<PencilRuler className="ml-1 w-4 h-4" /></Link>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Link className="hover:underline text-pBrown font-title flex items-center text-sm" href={''}>
+                                Supprimer<Trash className="ml-1 w-4 h-4" />
+                            </Link>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Êtes vous sûr(e) de vouloir supprimer ce Kouiz ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Cette action est irréversible.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction className={`font-title ${buttonVariants({ variant: 'destructive' })}`} onClick={handleDeleteKouiz}>Supprimer</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </div>
         </>

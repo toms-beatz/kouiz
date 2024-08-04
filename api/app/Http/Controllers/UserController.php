@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EditUserRequest;
 use App\Models\Kouiz;
+use App\Models\UserAnswers;
 use Hash;
 use App\Http\Requests\RegisterUser;
 use App\Http\Requests\LoginUser;
@@ -11,6 +12,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
+
 
 
 
@@ -85,8 +88,7 @@ class UserController extends Controller
                     'status_code' => 200,
                     'message' => 'Déconnexion réussie',
                 ], 200, [], JSON_UNESCAPED_UNICODE);
-            }
-            else {
+            } else {
                 return response()->json([
                     'success' => false,
                     'status_code' => 401,
@@ -94,7 +96,7 @@ class UserController extends Controller
                     'message' => 'Vous n\'êtes pas autorisé à vous déconnecter de ce profil',
                 ], 401, [], JSON_UNESCAPED_UNICODE);
             }
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -116,8 +118,7 @@ class UserController extends Controller
                     'status_code' => 200,
                     'data' => $user,
                 ], 200, [], JSON_UNESCAPED_UNICODE);
-            }
-            else {
+            } else {
                 return response()->json([
                     'success' => false,
                     'status_code' => 401,
@@ -125,7 +126,7 @@ class UserController extends Controller
                     'message' => 'Vous n\'êtes pas autorisé à voir ce profil',
                 ], 401, [], JSON_UNESCAPED_UNICODE);
             }
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -137,27 +138,17 @@ class UserController extends Controller
         }
     }
 
-    public function updateProfile(EditUserRequest $request, $id)
+    public function updateProfile(EditUserRequest $request)
 {
     try {
         // Récupérer l'utilisateur à mettre à jour
-        $user = User::findOrFail($id);
-        
-        // Vérifier si l'utilisateur authentifié peut mettre à jour ce profil
-        if ($request->user()->id != $user->id) {
-            return response()->json([
-                'success' => false,
-                'status_code' => 401,
-                'error' => true,
-                'message' => 'Vous n\'êtes pas autorisé à modifier ce profil',
-            ], 401, [], JSON_UNESCAPED_UNICODE);
-        }
+        $user = auth()->user(); // Utiliser auth() pour récupérer l'utilisateur actuel
 
         // Mettre à jour les champs du profil si les données sont fournies dans la requête
-        if ($request->has('username')) {
+        if ($request->has('username') && $request->username != "") {
             $user->username = $request->username;
         }
-        if ($request->has('email')) {
+        if ($request->has('email') && $request->email != "") {
             $user->email = $request->email;
         }
         if ($request->has('password')) {
@@ -189,10 +180,11 @@ class UserController extends Controller
 }
 
 
-    public function delete(Request $request, $id)
+
+    public function delete(Request $request)
     {
         try {
-            $user = User::find($id);
+            $user = Auth::user();
             if ($request->user()->id == $user->id) {
                 $user->delete();
                 return response()->json([
@@ -200,8 +192,7 @@ class UserController extends Controller
                     'status_code' => 200,
                     'message' => 'Profil supprimé',
                 ], 200, [], JSON_UNESCAPED_UNICODE);
-            }
-            else {
+            } else {
                 return response()->json([
                     'success' => false,
                     'status_code' => 401,
@@ -209,7 +200,7 @@ class UserController extends Controller
                     'message' => 'Vous n\'êtes pas autorisé à supprimer ce profil',
                 ], 401, [], JSON_UNESCAPED_UNICODE);
             }
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -239,18 +230,85 @@ class UserController extends Controller
     }
 
 
-    public function dashboard() {
+    public function dashboard()
+    {
         $kouiz_count = Kouiz::count();
         $user_count = User::count();
-        $username = Auth::user()->username;
+        $user = Auth::user();
+        $username = $user->username;
+        $topKouiz = $user->createdKouiz()
+            ->withCount([
+                    'questions as answers_count' => function ($query) {
+                        $query->join('user_answer_details', 'questions.id', '=', 'user_answer_details.question_id');
+                    }
+                ])
+            ->orderBy('answers_count', 'desc')
+            ->first();
+
+        if ($topKouiz === null) {
+            $topKouiz = 'Vous n\'avez pas encore de Kouiz.';
+        }
+        $usersAnswers = UserAnswers::count();
         return response()->json([
             'success' => true,
             'status_code' => 200,
             'data' => [
-                'kouiz_count' => $kouiz_count,
-                'user_count' => $user_count,
-                'username' => $username,
-            ],
+                    'kouiz_count' => $kouiz_count,
+                    'user_count' => $user_count,
+                    'username' => $username,
+                    'topKouiz' => $topKouiz,
+                    'usersAnswers' => $usersAnswers,
+
+                ],
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
+
+    public function userDashboard()
+{
+    try {
+        $user = Auth::user();
+        $username = $user->username;
+
+        $topKouiz = $user->createdKouiz()
+            ->withCount([
+                'questions as answers_count' => function ($query) {
+                    $query->join('user_answer_details', 'questions.id', '=', 'user_answer_details.question_id');
+                }
+            ])
+            ->orderBy('answers_count', 'desc')
+            ->first();
+
+        if ($topKouiz === null) {
+            $topKouiz = 'Vous n\'avez pas encore de Kouiz.';
+        }
+
+        $totalKouiz = $user->createdKouiz->count();
+
+        $totalAnswers = DB::table('user_answers')
+        ->join('kouiz', 'kouiz.id', '=', 'user_answers.kouiz_id')
+        ->join('users', 'users.id', '=', 'kouiz.creator_id')
+        ->where('users.id', '=', $user->id)
+        ->count('user_answers.id');
+
+        return response()->json([
+            'success' => true,
+            'status_code' => 200,
+            'data' => [
+                'username' => $username,
+                'topKouiz' => $topKouiz,
+                'totalKouiz' => $totalKouiz,
+                'totalAnswers' => $totalAnswers,
+            ],
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'status_code' => 500,
+            'error' => true,
+            'message' => 'Erreur lors de la récupération du tableau de bord utilisateur',
+            'error_message' => $e->getMessage()
+        ], 500, [], JSON_UNESCAPED_UNICODE);
+    }
+}
+
 }

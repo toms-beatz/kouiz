@@ -30,7 +30,7 @@ const PaginationItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
 >(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("", className)} {...props} />
+  <li ref={ref} className={cn("!bg-pWhite dark:!bg-pBlue hover:!bg-pGray rounded-lg", className)} {...props} />
 ))
 PaginationItem.displayName = "PaginationItem"
 
@@ -47,12 +47,13 @@ const PaginationLink = ({
 }: PaginationLinkProps) => (
   <a
     aria-current={isActive ? "page" : undefined}
-    className={cn(
+    className={cn('cursor-pointer !bg-pWhite dark:!bg-pBlue hover:!bg-pGray dark:hover:!bg-pBrown border',
       buttonVariants({
-        variant: isActive ? "outline" : "ghost",
+        variant: isActive ? "outline" : "secondary",
         size,
       }),
-      className
+      className, 
+      isActive ? 'border-[#999] dark:border-pBrown' : 'border-pGray'
     )}
     {...props}
   />
@@ -66,11 +67,11 @@ const PaginationPrevious = ({
   <PaginationLink
     aria-label="Go to previous page"
     size="default"
-    className={cn("gap-1 pl-2.5", className)}
+    className={cn("gap-1 pl-2.5 cursor-pointer !border-pGray border", className)}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
-    <span>Previous</span>
+    <span>Précédent</span>
   </PaginationLink>
 )
 PaginationPrevious.displayName = "PaginationPrevious"
@@ -82,10 +83,10 @@ const PaginationNext = ({
   <PaginationLink
     aria-label="Go to next page"
     size="default"
-    className={cn("gap-1 pr-2.5", className)}
+    className={cn("gap-1 pr-2.5 cursor-pointer !border-pGray border", className)}
     {...props}
   >
-    <span>Next</span>
+    <span>Suivant</span>
     <ChevronRight className="h-4 w-4" />
   </PaginationLink>
 )

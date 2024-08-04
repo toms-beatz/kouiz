@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class Kouiz extends Model
 {
@@ -25,4 +27,10 @@ class Kouiz extends Model
     {
         return $this->belongsTo(User::class, 'creator_id');
     }
+
+    public function answers(): HasMany
+    {
+        return $this->hasMany(UserAnswers::class);
+    }
+
 }
